@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, useColorScheme, Platform } from "react-native";
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, useColorScheme, Platform, ScrollView } from "react-native";
 import { router } from "expo-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -61,23 +61,25 @@ export default function AdminOrdersScreen() {
         <View style={{ width: 24 }} />
       </View>
 
-      <FlatList
-        horizontal
-        data={STATUSES}
-        keyExtractor={(item) => item.label}
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.filterRow}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            onPress={() => { Haptics.selectionAsync(); setSelectedStatus(item.value); }}
-            style={[styles.filterChip, { backgroundColor: selectedStatus === item.value ? Colors.primary : theme.surface }]}
-          >
-            <Text style={[styles.filterText, { color: selectedStatus === item.value ? "#FFF" : theme.textSecondary }]}>
-              {item.label}
-            </Text>
-          </TouchableOpacity>
-        )}
-      />
+      <View style={[styles.filterContainer, { borderBottomColor: theme.border, backgroundColor: theme.card }]}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filterRow}
+        >
+          {STATUSES.map((item) => (
+            <TouchableOpacity
+              key={item.label}
+              onPress={() => { Haptics.selectionAsync(); setSelectedStatus(item.value); }}
+              style={[styles.filterChip, { backgroundColor: selectedStatus === item.value ? Colors.primary : theme.surface }]}
+            >
+              <Text style={[styles.filterText, { color: selectedStatus === item.value ? "#FFF" : theme.textSecondary }]}>
+                {item.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
 
       <FlatList
         data={data?.orders || []}
@@ -118,9 +120,12 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, paddingBottom: 12 },
   title: { fontFamily: "Inter_700Bold", fontSize: 20 },
-  filterRow: { paddingHorizontal: 20, gap: 8, paddingBottom: 12 },
-  filterChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20 },
-  filterText: { fontFamily: "Inter_500Medium", fontSize: 13 },
+  filterContainer: { 
+    borderBottomWidth: 1, 
+  },
+  filterRow: { paddingHorizontal: 20, gap: 8, paddingVertical: 12 },
+  filterChip: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, minWidth: 80, alignItems: 'center' },
+  filterText: { fontFamily: "Inter_600SemiBold", fontSize: 14, textAlign: 'center' },
   list: { paddingHorizontal: 20 },
   orderContainer: { gap: 8 },
   nextStatusBtn: {

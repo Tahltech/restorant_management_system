@@ -5,6 +5,57 @@ import { authenticate, requireRole, type AuthRequest } from "../middleware/auth.
 
 const router = Router();
 
+router.get("/all", async (req, res) => {
+  try {
+    const meals = await db
+      .select()
+      .from(mealsTable)
+      .orderBy(desc(mealsTable.createdAt));
+
+    const mealIds = meals.map((m) => m.id);
+    let reviewStats: Record<string, { avg: number; count: number }> = {};
+
+    if (mealIds.length > 0) {
+      const stats = await db
+        .select({
+          mealId: reviewsTable.mealId,
+          avg: sql<number>`avg(${reviewsTable.rating})::numeric(3,2)`,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(reviewsTable)
+        .where(inArray(reviewsTable.mealId, mealIds))
+        .groupBy(reviewsTable.mealId);
+      reviewStats = Object.fromEntries(stats.map((s) => [s.mealId, { avg: s.avg, count: s.count }]));
+    }
+
+    const catIds = [...new Set(meals.map((m) => m.categoryId).filter((id): id is string => !!id))];
+    let catMap: Record<string, string> = {};
+    if (catIds.length > 0) {
+      const cats = await db.select().from(categoriesTable).where(inArray(categoriesTable.id, catIds));
+      catMap = Object.fromEntries(cats.map((c) => [c.id, c.name]));
+    }
+
+    res.json(meals.map((m) => ({
+      id: m.id,
+      name: m.name,
+      description: m.description,
+      categoryId: m.categoryId,
+      categoryName: m.categoryId ? catMap[m.categoryId] : null,
+      price: parseFloat(m.price),
+      imageUrl: m.imageUrl,
+      available: m.available,
+      ingredients: m.ingredients,
+      preparationTime: m.preparationTime,
+      averageRating: reviewStats[m.id]?.avg ?? null,
+      reviewCount: reviewStats[m.id]?.count ?? 0,
+      createdAt: m.createdAt,
+    })));
+  } catch (err) {
+    console.error("List all meals error:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 router.get("/", async (req, res) => {
   try {
     const { categoryId, search, available, page = "1", limit = "20" } = req.query;
@@ -123,7 +174,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-router.post("/", authenticate, requireRole("admin"), async (req: AuthRequest, res) => {
+router.post("/", authenticate, requireRole("admin", "kitchen"), async (req: AuthRequest, res) => {
   try {
     const { name, description, categoryId, price, imageUrl, available, ingredients, preparationTime } = req.body;
     if (!name || price === undefined) {
@@ -147,7 +198,7 @@ router.post("/", authenticate, requireRole("admin"), async (req: AuthRequest, re
   }
 });
 
-router.put("/:id", authenticate, requireRole("admin"), async (req: AuthRequest, res) => {
+router.put("/:id", authenticate, requireRole("admin", "kitchen"), async (req: AuthRequest, res) => {
   try {
     const { name, description, categoryId, price, imageUrl, available, ingredients, preparationTime } = req.body;
     const [meal] = await db
@@ -176,7 +227,7 @@ router.put("/:id", authenticate, requireRole("admin"), async (req: AuthRequest, 
   }
 });
 
-router.delete("/:id", authenticate, requireRole("admin"), async (req: AuthRequest, res) => {
+router.delete("/:id", authenticate, requireRole("admin", "kitchen"), async (req: AuthRequest, res) => {
   try {
     await db.delete(mealsTable).where(eq(mealsTable.id, req.params.id));
     res.json({ success: true, message: "Meal deleted" });

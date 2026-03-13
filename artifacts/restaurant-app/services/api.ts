@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export const BASE_URL = process.env.EXPO_PUBLIC_DOMAIN
-  ? `http://${process.env.EXPO_PUBLIC_DOMAIN}/api`
+  ? (process.env.EXPO_PUBLIC_DOMAIN.startsWith('http') ? `${process.env.EXPO_PUBLIC_DOMAIN}/api` : `http://${process.env.EXPO_PUBLIC_DOMAIN}/api`)
   : "/api";
 
 async function getToken() {
@@ -17,10 +17,13 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   if (token) headers.Authorization = `Bearer ${token}`;
 
   const res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
-  const data = await res.json();
+  
   if (!res.ok) {
-    throw new Error(data.message || data.error || `HTTP ${res.status}`);
+    const errorData = await res.json() as { message?: string; error?: string };
+    throw new Error(errorData.message || errorData.error || `HTTP ${res.status}`);
   }
+  
+  const data = await res.json() as T;
   return data;
 }
 
@@ -130,6 +133,7 @@ export const mealsApi = {
     if (params?.page) qs.set("page", String(params.page));
     return api.get<{ meals: Meal[]; total: number; page: number; totalPages: number }>(`/meals?${qs}`);
   },
+  getAll: () => api.get<Meal[]>("/meals/all"),
   get: (id: string) => api.get<Meal>(`/meals/${id}`),
   create: (data: Partial<Meal>) => api.post<Meal>("/meals", data),
   update: (id: string, data: Partial<Meal>) => api.put<Meal>(`/meals/${id}`, data),
@@ -164,6 +168,20 @@ export const reviewsApi = {
 export const adminApi = {
   stats: () => api.get<AdminStats>("/admin/stats"),
   seed: () => api.post<{ success: boolean }>("/admin/seed", {}),
+  analytics: {
+    monthly: () => api.get<{
+      monthlyData: Array<{ month: string; income: number; orders: number; meals: number }>;
+      topMeals: Array<{ name: string; orders: number; revenue: number }>;
+      metrics: {
+        totalIncome: number;
+        totalOrders: number;
+        totalMeals: number;
+        avgOrderValue: number;
+        growthRate: number;
+        avgRating: number;
+      };
+    }>("/admin/analytics/monthly"),
+  },
 };
 
 export const usersApi = {
@@ -171,4 +189,5 @@ export const usersApi = {
   profile: () => api.get<User>("/users/profile"),
   updateProfile: (data: Partial<User>) => api.put<User>("/users/profile", data),
   block: (id: string, blocked: boolean) => api.put<User>(`/users/${id}/block`, { blocked }),
+  create: (data: { name: string; email: string; password: string; role: string; phone?: string }) => api.post<User>("/users", data),
 };

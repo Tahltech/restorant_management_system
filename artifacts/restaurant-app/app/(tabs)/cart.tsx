@@ -6,6 +6,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/Button";
 import type { CartItem } from "@/context/CartContext";
 
@@ -40,8 +41,17 @@ export default function CartScreen() {
   const theme = isDark ? Colors.dark : Colors.light;
   const insets = useSafeAreaInsets();
   const { items, updateQuantity, removeItem, clearCart, total, itemCount } = useCart();
+  const { user } = useAuth();
   const topPadding = Platform.OS === "web" ? 67 : insets.top;
   const bottomPadding = Platform.OS === "web" ? 34 : 0;
+
+  const handleCheckout = () => {
+    if (!user) {
+      router.push("/(auth)/login");
+      return;
+    }
+    router.push("/checkout");
+  };
 
   const handleDec = (item: CartItem) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -56,11 +66,11 @@ export default function CartScreen() {
           <Text style={[styles.title, { color: theme.text }]}>Cart</Text>
         </View>
         <View style={styles.emptyState}>
-          <View style={[styles.emptyIcon, { backgroundColor: Colors.primary + "15" }]}>
-            <Ionicons name="cart-outline" size={56} color={Colors.primary} />
+          <View style={[styles.emptyIcon, { backgroundColor: theme.card + "15" }]}>
+            <Ionicons name="cart-outline" size={56} color={theme.text} />
           </View>
           <Text style={[styles.emptyTitle, { color: theme.text }]}>Your cart is empty</Text>
-          <Text style={[styles.emptyText, { color: theme.textSecondary }]}>Add some delicious meals to get started</Text>
+          <Text style={[styles.emptyText, { color: theme.textTertiary }]}>Add some delicious meals to get started</Text>
           <Button title="Browse Menu" onPress={() => router.push("/(tabs)")} style={styles.browseBtn} />
         </View>
       </View>
@@ -79,7 +89,7 @@ export default function CartScreen() {
       <FlatList
         data={items}
         keyExtractor={(item) => item.mealId}
-        contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 160 }]}
+        contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 240 }]}
         ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
         renderItem={({ item }) => (
           <CartItemRow
@@ -93,7 +103,7 @@ export default function CartScreen() {
       />
 
       {/* Checkout Footer */}
-      <View style={[styles.footer, { backgroundColor: theme.card, borderTopColor: theme.border, paddingBottom: insets.bottom + bottomPadding + 16 }]}>
+      <View style={[styles.footer, { backgroundColor: theme.card, borderTopColor: theme.border, paddingBottom: insets.bottom + bottomPadding + 100 }]}>
         <View style={styles.summaryRow}>
           <Text style={[styles.summaryLabel, { color: theme.textSecondary }]}>Subtotal</Text>
           <Text style={[styles.summaryValue, { color: theme.text }]}>${total.toFixed(2)}</Text>
@@ -108,7 +118,7 @@ export default function CartScreen() {
         </View>
         <Button
           title={`Checkout • $${total.toFixed(2)}`}
-          onPress={() => router.push("/checkout")}
+          onPress={handleCheckout}
           size="lg"
         />
       </View>

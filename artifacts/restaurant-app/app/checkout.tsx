@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, useColorScheme, Platform } from "react-native";
 import { router } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -11,6 +11,7 @@ import { ordersApi, type OrderType, type PaymentMethod } from "@/services/api";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import * as Haptics from "expo-haptics";
+import Toast from "react-native-toast-message";
 
 export default function CheckoutScreen() {
   const scheme = useColorScheme();
@@ -22,6 +23,8 @@ export default function CheckoutScreen() {
   const qc = useQueryClient();
   const topPadding = Platform.OS === "web" ? 67 : insets.top;
 
+  // All hooks must be called before any early returns
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const [orderType, setOrderType] = useState<OrderType>("delivery");
   const [deliveryAddress, setDeliveryAddress] = useState(user?.addresses?.[0] || "");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
@@ -41,12 +44,35 @@ export default function CheckoutScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       clearCart();
       qc.invalidateQueries({ queryKey: ["my-orders"] });
-      router.replace(`/order/${order.id}`);
+      // Navigate to orders tab
+      router.replace("/(tabs)/orders");
+      // Show success toast
+      Toast.show({
+        type: 'success',
+        text1: 'Order Placed!',
+        text2: `Order #${order.id.slice(-6)} has been placed successfully`,
+      });
     },
     onError: (err: any) => {
       setError(err.message || "Failed to place order");
     },
   });
+
+  // Check if user is authenticated
+  useEffect(() => {
+    if (!user && !isRedirecting) {
+      setIsRedirecting(true);
+      router.replace("/(auth)/login");
+    }
+  }, [user, isRedirecting]);
+
+  // Redirect if cart is empty
+  useEffect(() => {
+    if (items.length === 0 && !isRedirecting) {
+      setIsRedirecting(true);
+      router.replace("/(tabs)/cart");
+    }
+  }, [items.length, isRedirecting]);
 
   const handlePlaceOrder = () => {
     if (orderType === "delivery" && !deliveryAddress.trim()) {
@@ -56,6 +82,17 @@ export default function CheckoutScreen() {
     setError("");
     placeOrder();
   };
+
+  // Show loading or redirecting state
+  if (isRedirecting || !user || items.length === 0) {
+    return (
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
+        <View style={[styles.loadingContainer, { paddingTop: topPadding + 12 }]}>
+          <Text style={[styles.loadingText, { color: theme.text }]}>Loading...</Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
@@ -69,7 +106,7 @@ export default function CheckoutScreen() {
       </View>
 
       <ScrollView
-        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 120 }]}
+        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 200 }]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
@@ -131,7 +168,7 @@ export default function CheckoutScreen() {
               placeholder="Or enter delivery address..."
               value={deliveryAddress}
               onChangeText={setDeliveryAddress}
-              leftIcon="location"
+              leftIcon="map-pin"
               multiline
             />
           </View>
@@ -192,7 +229,7 @@ export default function CheckoutScreen() {
       </ScrollView>
 
       {/* Place Order Button */}
-      <View style={[styles.footer, { backgroundColor: theme.card, borderTopColor: theme.border, paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 0) + 16 }]}>
+      <View style={[styles.footer, { backgroundColor: theme.card, borderTopColor: theme.border, paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 100) + 16 }]}>
         <Button
           title={`Place Order • $${total.toFixed(2)}`}
           onPress={handlePlaceOrder}
@@ -206,6 +243,15 @@ export default function CheckoutScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  loadingContainer: { 
+    flex: 1, 
+    justifyContent: "center", 
+    alignItems: "center" 
+  },
+  loadingText: { 
+    fontFamily: "Inter_400Regular", 
+    fontSize: 16 
+  },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, paddingBottom: 16, borderBottomWidth: 1 },
   title: { fontFamily: "Inter_700Bold", fontSize: 18 },
   content: { padding: 16, gap: 12 },

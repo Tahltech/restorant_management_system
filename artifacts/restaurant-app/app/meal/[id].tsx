@@ -55,6 +55,10 @@ export default function MealDetailScreen() {
 
   const handleAddToCart = () => {
     if (!meal) return;
+    if (!user) {
+      router.push("/(auth)/login");
+      return;
+    }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     addItem({ mealId: meal.id, mealName: meal.name, price: meal.price, imageUrl: meal.imageUrl }, qty);
   };
@@ -96,7 +100,7 @@ export default function MealDetailScreen() {
           <Text style={[styles.name, { color: theme.text }]}>{meal.name}</Text>
 
           <View style={styles.metaRow}>
-            {meal.averageRating != null && (
+            {meal.averageRating != null && typeof meal.averageRating === 'number' && (
               <View style={styles.ratingRow}>
                 <StarRating rating={meal.averageRating} size={16} />
                 <Text style={[styles.ratingText, { color: theme.textSecondary }]}>

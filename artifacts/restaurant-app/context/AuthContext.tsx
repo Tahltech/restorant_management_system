@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
+import Toast from "react-native-toast-message";
 
 export type UserRole = "customer" | "admin" | "kitchen";
 
@@ -30,7 +31,7 @@ interface AuthContextType extends AuthState {
 }
 
 const BASE_URL = process.env.EXPO_PUBLIC_DOMAIN
-  ? `http://${process.env.EXPO_PUBLIC_DOMAIN}/api`
+  ? (process.env.EXPO_PUBLIC_DOMAIN.startsWith('http') ? `${process.env.EXPO_PUBLIC_DOMAIN}/api` : `http://${process.env.EXPO_PUBLIC_DOMAIN}/api`)
   : "/api";
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -62,19 +63,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const login = async (email: string, password: string) => {
+  interface AuthResponse {
+  token: string;
+  user: User;
+}
+
+const login = async (email: string, password: string) => {
     const res = await fetch(`${BASE_URL}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Login failed");
+    const data = await res.json() as AuthResponse;
+    if (!res.ok) {
+      const errorMessage = (data as any).message || "Login failed";
+      Toast.show({
+        type: 'error',
+        text1: 'Login Failed',
+        text2: errorMessage,
+        position: 'top',
+        visibilityTime: 3000,
+      });
+      throw new Error(errorMessage);
+    }
+    
     await Promise.all([
       AsyncStorage.setItem("auth_token", data.token),
       AsyncStorage.setItem("auth_user", JSON.stringify(data.user)),
     ]);
     setState({ user: data.user, token: data.token, isLoading: false });
+    
+    // Show success toast
+    Toast.show({
+      type: 'success',
+      text1: 'Welcome Back!',
+      text2: `Hello ${data.user.name?.split(' ')[0]}!`,
+      position: 'top',
+      visibilityTime: 2000,
+    });
     
     // Navigate based on user role
     if (data.user.role === "admin") {
@@ -92,13 +118,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, email, password, role }),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Registration failed");
+    const data = await res.json() as AuthResponse;
+    if (!res.ok) {
+      const errorMessage = (data as any).message || "Registration failed";
+      Toast.show({
+        type: 'error',
+        text1: 'Registration Failed',
+        text2: errorMessage,
+        position: 'top',
+        visibilityTime: 3000,
+      });
+      throw new Error(errorMessage);
+    }
     await Promise.all([
       AsyncStorage.setItem("auth_token", data.token),
       AsyncStorage.setItem("auth_user", JSON.stringify(data.user)),
     ]);
     setState({ user: data.user, token: data.token, isLoading: false });
+    
+    // Show success toast
+    Toast.show({
+      type: 'success',
+      text1: 'Account Created!',
+      text2: `Welcome ${data.user.name?.split(' ')[0]}!`,
+      position: 'top',
+      visibilityTime: 2000,
+    });
     
     // Navigate based on user role
     if (data.user.role === "admin") {
@@ -112,19 +157,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      console.log("Starting logout...");
       await Promise.all([
         AsyncStorage.removeItem("auth_token"),
         AsyncStorage.removeItem("auth_user"),
       ]);
-      console.log("Storage cleared, updating state...");
       setState({ user: null, token: null, isLoading: false });
       
-      console.log("State updated, navigating to login...");
       // Navigate back to login page
       router.replace("/(auth)/login");
     } catch (error) {
-      console.error("Logout error:", error);
       // Even if there's an error, try to clear state and navigate
       setState({ user: null, token: null, isLoading: false });
       router.replace("/(auth)/login");

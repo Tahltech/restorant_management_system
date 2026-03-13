@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, useColorScheme, Platform } from "react-native";
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, useColorScheme, Platform, Image } from "react-native";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -130,9 +130,12 @@ export default function KitchenScreen() {
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       {/* Header */}
       <View style={[styles.header, { paddingTop: topPadding + 12, backgroundColor: theme.background }]}>
-        <View>
-          <Text style={[styles.title, { color: theme.text }]}>Kitchen</Text>
-          <Text style={[styles.subtitle, { color: theme.textSecondary }]}>{activeOrders.length} active orders</Text>
+        <View style={styles.headerLeft}>
+          <Image source={require("@/assets/images/logo.png")} style={styles.headerLogo} resizeMode="contain" />
+          <View>
+            <Text style={[styles.title, { color: theme.text }]}>Kitchen</Text>
+            <Text style={[styles.subtitle, { color: theme.textSecondary }]}>{activeOrders.length} active orders</Text>
+          </View>
         </View>
         <TouchableOpacity onPress={() => logout()} style={[styles.logoutBtn, { backgroundColor: Colors.error + "15" }]}>
           <Ionicons name="log-out-outline" size={20} color={Colors.error} />
@@ -199,7 +202,9 @@ export default function KitchenScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", paddingHorizontal: 20, paddingBottom: 12 },
+  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", paddingHorizontal: 20, paddingBottom: 16 },
+  headerLeft: { flexDirection: "row", alignItems: "center", gap: 12 },
+  headerLogo: { width: 32, height: 32, borderRadius: 16 },
   title: { fontFamily: "Inter_700Bold", fontSize: 26 },
   subtitle: { fontFamily: "Inter_400Regular", fontSize: 14 },
   logoutBtn: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center" },

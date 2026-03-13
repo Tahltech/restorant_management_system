@@ -14,7 +14,8 @@ export default function Index() {
     );
   }
 
-  if (!user) return <Redirect href="/(auth)/login" />;
+  // Show welcome page for unauthenticated users
+  if (!user) return <Redirect href="/home" />;
   if (user.role === "admin") return <Redirect href="/admin" />;
   if (user.role === "kitchen") return <Redirect href="/kitchen" />;
   return <Redirect href="/(tabs)" />;

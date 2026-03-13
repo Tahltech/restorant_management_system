@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, useColorScheme, Platform } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, useColorScheme, Platform, Image } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -44,14 +44,10 @@ export default function ProfileScreen() {
   const topPadding = Platform.OS === "web" ? 67 : insets.top;
 
   const handleLogout = () => {
-    console.log("Logout button pressed");
-    
     // Try immediate logout first (without confirmation)
     try {
       logout();
     } catch (error) {
-      console.error("Direct logout failed:", error);
-      
       // Fallback to confirmation dialog
       Alert.alert("Sign Out", "Are you sure you want to sign out?", [
         { text: "Cancel", style: "cancel" },
@@ -59,7 +55,6 @@ export default function ProfileScreen() {
           text: "Sign Out", 
           style: "destructive", 
           onPress: () => {
-            console.log("Logout confirmed in alert");
             try {
               logout();
             } catch (err) {
@@ -82,48 +77,46 @@ export default function ProfileScreen() {
     >
       {/* Profile Header */}
       <View style={[styles.profileHeader, { backgroundColor: theme.card }]}>
-        <View style={[styles.avatar, { backgroundColor: Colors.primary + "20" }]}>
-          <Text style={styles.avatarText}>
-            {user?.name?.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase() || "?"}
-          </Text>
-        </View>
-        <View style={styles.profileInfo}>
-          <Text style={[styles.profileName, { color: theme.text }]}>{user?.name}</Text>
-          <Text style={[styles.profileEmail, { color: theme.textSecondary }]}>{user?.email}</Text>
-          <View style={[styles.roleBadge, { backgroundColor: roleColor + "20" }]}>
-            <Text style={[styles.roleText, { color: roleColor }]}>{roleLabel}</Text>
+        <View style={styles.headerLeft}>
+          <Image source={require("@/assets/images/logo.png")} style={styles.headerLogo} resizeMode="contain" />
+          <View style={styles.greetingSection}>
+            <Text style={[styles.greeting, { color: theme.textSecondary }]}>Hello,</Text>
+            <Text style={[styles.profileName, { color: theme.text }]}>{user?.name}</Text>
           </View>
         </View>
+        <TouchableOpacity onPress={handleLogout} style={[styles.logoutBtn, { backgroundColor: Colors.error + "15" }]}>
+          <Ionicons name="log-out-outline" size={20} color={Colors.error} />
+        </TouchableOpacity>
       </View>
 
       {/* Sections */}
       <View style={[styles.section, { backgroundColor: theme.card }]}>
         <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>Account</Text>
-        <ProfileItem icon="person-outline" label="Edit Profile" onPress={() => {}} theme={theme} />
-        <ProfileItem icon="location" label="Delivery Addresses" onPress={() => {}} theme={theme} rightText={`${user?.addresses?.length || 0} saved`} />
-        <ProfileItem icon="receipt-outline" label="Order History" onPress={() => router.push("/(tabs)/orders")} theme={theme} />
+        <ProfileItem icon="person-outline" label="Edit Profile" onPress={() => router.push("/profile/edit")} theme={theme} />
+        <ProfileItem icon="location" label="Delivery Addresses" onPress={() => router.push("/profile/addresses")} theme={theme} rightText={`${user?.addresses?.length || 0} saved`} />
+        <ProfileItem icon="receipt-outline" label="Order History" onPress={() => router.push("/orders")} theme={theme} />
       </View>
 
       {user?.role === "admin" && (
         <View style={[styles.section, { backgroundColor: theme.card }]}>
           <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>Management</Text>
-          <ProfileItem icon="grid-outline" label="Admin Dashboard" onPress={() => router.push("/admin")} theme={theme} />
-          <ProfileItem icon="restaurant-outline" label="Manage Meals" onPress={() => router.push("/admin/meals")} theme={theme} />
-          <ProfileItem icon="people-outline" label="Manage Users" onPress={() => router.push("/admin/users")} theme={theme} />
+          <ProfileItem icon="grid-outline" label="Admin Dashboard" onPress={() => router.push("/(tabs)/index")} theme={theme} />
+          <ProfileItem icon="restaurant-outline" label="Manage Meals" onPress={() => router.push("/(tabs)/index")} theme={theme} />
+          <ProfileItem icon="people-outline" label="Manage Users" onPress={() => router.push("/(tabs)/index")} theme={theme} />
         </View>
       )}
 
       {user?.role === "kitchen" && (
         <View style={[styles.section, { backgroundColor: theme.card }]}>
           <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>Kitchen</Text>
-          <ProfileItem icon="restaurant" label="Kitchen Dashboard" onPress={() => router.push("/kitchen")} theme={theme} />
+          <ProfileItem icon="restaurant" label="Kitchen Dashboard" onPress={() => router.push("/(tabs)/index")} theme={theme} />
         </View>
       )}
 
       <View style={[styles.section, { backgroundColor: theme.card }]}>
         <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>More</Text>
-        <ProfileItem icon="help-circle-outline" label="Help & Support" onPress={() => {}} theme={theme} />
-        <ProfileItem icon="information-circle-outline" label="About" onPress={() => {}} theme={theme} />
+        <ProfileItem icon="help-circle-outline" label="Help & Support" onPress={() => router.push("/help")} theme={theme} />
+        <ProfileItem icon="information-circle-outline" label="About" onPress={() => router.push("/about")} theme={theme} />
       </View>
 
       <TouchableOpacity
@@ -140,7 +133,11 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 20, gap: 16 },
-  profileHeader: { borderRadius: 16, padding: 20, flexDirection: "row", alignItems: "center", gap: 16 },
+  profileHeader: { borderRadius: 16, padding: 20, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 16 },
+  headerLeft: { flexDirection: "row", alignItems: "center", gap: 12 },
+  headerLogo: { width: 32, height: 32, borderRadius: 16 },
+  greetingSection: { flexDirection: "column" },
+  greeting: { fontFamily: "Inter_400Regular", fontSize: 14 },
   avatar: { width: 64, height: 64, borderRadius: 32, alignItems: "center", justifyContent: "center" },
   avatarText: { fontFamily: "Inter_700Bold", fontSize: 24, color: Colors.primary },
   profileInfo: { flex: 1, gap: 4 },
@@ -155,6 +152,6 @@ const styles = StyleSheet.create({
   itemLabel: { flex: 1, fontFamily: "Inter_500Medium", fontSize: 15 },
   itemRight: { flexDirection: "row", alignItems: "center", gap: 4 },
   rightText: { fontFamily: "Inter_400Regular", fontSize: 13 },
-  logoutBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, padding: 16, borderRadius: 14, borderWidth: 1 },
+  logoutBtn: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center", backgroundColor: Colors.error + "15" },
   logoutText: { fontFamily: "Inter_600SemiBold", fontSize: 16, color: Colors.error },
 });

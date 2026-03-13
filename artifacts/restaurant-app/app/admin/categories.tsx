@@ -49,7 +49,7 @@ export default function AdminCategoriesScreen() {
         </TouchableOpacity>
         <Text style={[styles.title, { color: theme.text }]}>Categories</Text>
         <TouchableOpacity onPress={openAdd} style={styles.addBtn}>
-          <Ionicons name="add" size={24} color="#FFF" />
+          <Ionicons name="add-circle" size={24} color="#FFF" />
         </TouchableOpacity>
       </View>
 
@@ -61,14 +61,14 @@ export default function AdminCategoriesScreen() {
         renderItem={({ item }) => (
           <View style={[styles.catRow, { backgroundColor: theme.card }]}>
             <View style={[styles.catIcon, { backgroundColor: Colors.secondary + "20" }]}>
-              <Ionicons name="grid-outline" size={20} color={Colors.secondary} />
+              <Ionicons name="pricetag-outline" size={20} color={Colors.secondary} />
             </View>
             <View style={styles.catInfo}>
               <Text style={[styles.catName, { color: theme.text }]}>{item.name}</Text>
               <Text style={[styles.catMealCount, { color: theme.textSecondary }]}>{item.mealCount} meals</Text>
             </View>
             <TouchableOpacity onPress={() => openEdit(item)} style={[styles.actionBtn, { backgroundColor: Colors.secondary + "20" }]}>
-              <Ionicons name="pencil-outline" size={16} color={Colors.secondary} />
+              <Ionicons name="create-outline" size={16} color={Colors.secondary} />
             </TouchableOpacity>
             <TouchableOpacity onPress={() => Alert.alert("Delete", `Delete "${item.name}"?`, [{ text: "Cancel", style: "cancel" }, { text: "Delete", style: "destructive", onPress: () => deleteCat(item.id) }])} style={[styles.actionBtn, { backgroundColor: Colors.error + "20" }]}>
               <Ionicons name="trash-outline" size={16} color={Colors.error} />

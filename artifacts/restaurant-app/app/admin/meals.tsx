@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import Colors from "@/constants/colors";
 import { mealsApi, categoriesApi, type Meal } from "@/services/api";
 import { Input } from "@/components/ui/Input";
@@ -31,6 +32,24 @@ function MealForm({ meal, categories, onSave, onClose, loading, theme }: MealFor
   const [ingredients, setIngredients] = useState(meal?.ingredients?.join(", ") || "");
   const insets = useSafeAreaInsets();
 
+  const handleImagePick = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        setImageUrl(result.assets[0].uri);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } catch (error) {
+      Alert.alert("Error", "Failed to pick image");
+    }
+  };
+
   const handleSave = () => {
     if (!name || !price) { Alert.alert("Error", "Name and price are required"); return; }
     onSave({
@@ -56,7 +75,28 @@ function MealForm({ meal, categories, onSave, onClose, loading, theme }: MealFor
         <Input label="Description" placeholder="Describe the meal" value={description} onChangeText={setDescription} multiline numberOfLines={3} style={{ height: 72 }} />
         <Input label="Price *" placeholder="0.00" value={price} onChangeText={setPrice} keyboardType="decimal-pad" leftIcon="pricetag-outline" />
         <Input label="Prep Time (min)" placeholder="15" value={prepTime} onChangeText={setPrepTime} keyboardType="number-pad" />
-        <Input label="Image URL" placeholder="https://..." value={imageUrl} onChangeText={setImageUrl} leftIcon="image-outline" />
+        
+        {/* Image Upload Section */}
+        <View style={styles.imageSection}>
+          <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>Meal Image</Text>
+          <TouchableOpacity onPress={handleImagePick} style={[styles.imagePicker, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+            {imageUrl ? (
+              <Image source={{ uri: imageUrl }} style={styles.previewImage} />
+            ) : (
+              <View style={styles.imagePlaceholder}>
+                <Ionicons name="camera-outline" size={40} color={theme.textTertiary} />
+                <Text style={[styles.imagePlaceholderText, { color: theme.textTertiary }]}>Tap to select image</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+          {imageUrl && (
+            <TouchableOpacity onPress={() => setImageUrl("")} style={styles.removeImageBtn}>
+              <Ionicons name="trash-outline" size={16} color={Colors.error} />
+              <Text style={[styles.removeImageText, { color: Colors.error }]}>Remove image</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+        
         <Input label="Ingredients (comma-separated)" placeholder="Flour, Sugar, Butter" value={ingredients} onChangeText={setIngredients} multiline numberOfLines={2} style={{ height: 56 }} />
         <View style={styles.categoryPicker}>
           <Text style={[styles.pickerLabel, { color: theme.textSecondary }]}>Category</Text>
@@ -126,7 +166,7 @@ export default function AdminMealsScreen() {
         </TouchableOpacity>
         <Text style={[styles.title, { color: theme.text }]}>Manage Meals</Text>
         <TouchableOpacity onPress={() => { setEditMeal(null); setShowForm(true); }} style={styles.addBtn}>
-          <Ionicons name="add" size={24} color="#FFF" />
+          <Ionicons name="add-circle" size={24} color="#FFF" />
         </TouchableOpacity>
       </View>
 
@@ -148,7 +188,7 @@ export default function AdminMealsScreen() {
             </View>
             <View style={styles.mealActions}>
               <TouchableOpacity onPress={() => { setEditMeal(item); setShowForm(true); }} style={[styles.actionBtn2, { backgroundColor: Colors.secondary + "20" }]}>
-                <Ionicons name="pencil-outline" size={16} color={Colors.secondary} />
+                <Ionicons name="create-outline" size={16} color={Colors.secondary} />
               </TouchableOpacity>
               <TouchableOpacity onPress={() => handleDelete(item)} style={[styles.actionBtn2, { backgroundColor: Colors.error + "20" }]}>
                 <Ionicons name="trash-outline" size={16} color={Colors.error} />
@@ -191,6 +231,30 @@ const styles = StyleSheet.create({
   modalHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 20, paddingBottom: 16, borderBottomWidth: 1 },
   modalTitle: { fontFamily: "Inter_700Bold", fontSize: 18 },
   formContent: { padding: 20, gap: 16 },
+  imageSection: { gap: 8 },
+  sectionLabel: { fontFamily: "Inter_500Medium", fontSize: 13 },
+  imagePicker: { 
+    height: 120, 
+    borderRadius: 12, 
+    borderWidth: 2, 
+    borderStyle: "dashed",
+    alignItems: "center", 
+    justifyContent: "center",
+    overflow: "hidden"
+  },
+  previewImage: { width: "100%", height: "100%" },
+  imagePlaceholder: { alignItems: "center", justifyContent: "center", gap: 8 },
+  imagePlaceholderText: { fontFamily: "Inter_400Regular", fontSize: 14 },
+  removeImageBtn: { 
+    flexDirection: "row", 
+    alignItems: "center", 
+    gap: 6, 
+    alignSelf: "flex-start",
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    marginTop: 4
+  },
+  removeImageText: { fontFamily: "Inter_500Medium", fontSize: 12 },
   categoryPicker: { gap: 8 },
   pickerLabel: { fontFamily: "Inter_500Medium", fontSize: 13 },
   categoryRow: { flexDirection: "row", gap: 8 },

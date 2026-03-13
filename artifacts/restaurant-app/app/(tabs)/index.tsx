@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import {
   View, Text, StyleSheet, ScrollView, FlatList, TouchableOpacity,
-  RefreshControl, useColorScheme, Platform
+  RefreshControl, useColorScheme, Platform, Image
 } from "react-native";
 import { router } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
@@ -48,21 +48,24 @@ export default function HomeScreen() {
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       {/* Header */}
       <View style={[styles.header, { paddingTop: topPadding + 12, backgroundColor: theme.background }]}>
-        <View>
-          <Text style={[styles.greeting, { color: theme.textSecondary }]}>Good {getTimeOfDay()}, </Text>
-          <Text style={[styles.userName, { color: theme.text }]}>{user?.name?.split(" ")[0] || "Guest"} 👋</Text>
+        <View style={styles.headerLeft}>
+          <Image source={require("@/assets/images/logo.png")} style={styles.headerLogo} resizeMode="contain" />
+          <View>
+            <Text style={[styles.greeting, { color: "#666666" }]}>Good {getTimeOfDay()}, </Text>
+            <Text style={[styles.userName, { color: theme.text }]}>{user?.name?.split(" ")[0] || "Guest"} 👋</Text>
+          </View>
         </View>
         <TouchableOpacity
           onPress={() => router.push("/(tabs)/search")}
           style={[styles.searchBtn, { backgroundColor: theme.surface }]}
         >
-          <Ionicons name="search" size={20} color={theme.textSecondary} />
+          <Ionicons name="search" size={20} color={theme.text} />
         </TouchableOpacity>
       </View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={isLoading} onRefresh={handleRefresh} tintColor={Colors.primary} />}
+        refreshControl={<RefreshControl refreshing={isLoading} onRefresh={handleRefresh} tintColor={theme.text} />}
         contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 100 }]}
       >
         {/* Categories */}
@@ -103,7 +106,7 @@ export default function HomeScreen() {
               {selectedCategory ? categoriesData?.find((c: Category) => c.id === selectedCategory)?.name || "Meals" : "Popular Picks"}
             </Text>
             {mealsData && (
-              <Text style={[styles.mealCount, { color: theme.textTertiary }]}>{mealsData.total} items</Text>
+              <Text style={[styles.mealCount, { color: theme.textSecondary }]}>{mealsData.total} items</Text>
             )}
           </View>
 
@@ -117,7 +120,7 @@ export default function HomeScreen() {
             </View>
           ) : !loadingMeals ? (
             <View style={styles.emptyState}>
-              <Ionicons name="restaurant-outline" size={48} color={theme.textTertiary} />
+              <Ionicons name="restaurant-outline" size={48} color="#CCCCCC" />
               <Text style={[styles.emptyText, { color: theme.textTertiary }]}>No meals available</Text>
             </View>
           ) : null}
@@ -142,6 +145,16 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     paddingHorizontal: 20,
     paddingBottom: 16,
+  },
+  headerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  headerLogo: {
+    width: 32,
+    height: 32,
+    marginRight: 12,
   },
   greeting: { fontFamily: "Inter_400Regular", fontSize: 14 },
   userName: { fontFamily: "Inter_700Bold", fontSize: 22 },

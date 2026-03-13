@@ -6,6 +6,8 @@ import Colors from "@/constants/colors";
 import type { Meal } from "@/services/api";
 import { StarRating } from "./ui/StarRating";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "expo-router";
 
 interface MealCardProps {
   meal: Meal;
@@ -18,10 +20,16 @@ export function MealCard({ meal, onPress, horizontal = false }: MealCardProps) {
   const isDark = scheme === "dark";
   const theme = isDark ? Colors.dark : Colors.light;
   const { addItem, items } = useCart();
+  const { user } = useAuth();
+  const router = useRouter();
 
   const cartItem = items.find((i) => i.mealId === meal.id);
 
   const handleAddToCart = () => {
+    if (!user) {
+      router.push("/(auth)/login");
+      return;
+    }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     addItem({ mealId: meal.id, mealName: meal.name, price: meal.price, imageUrl: meal.imageUrl });
   };

@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { db, usersTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
-import { authenticate, requireRole, type AuthRequest } from "../middleware/auth.js";
+import { authenticate, requireRole, type AuthRequest, generateToken } from "../middleware/auth.js";
+import bcrypt from "bcrypt";
 
 const router = Router();
 
@@ -42,6 +43,48 @@ router.put("/profile", authenticate, async (req: AuthRequest, res) => {
       .returning();
     res.json(formatUser(user));
   } catch (err) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+router.post("/", authenticate, requireRole("admin"), async (req: AuthRequest, res) => {
+  try {
+    const { name, email, password, role, phone } = req.body;
+    
+    if (!name || !email || !password || !role) {
+      res.status(400).json({ error: "Bad Request", message: "Name, email, password, and role are required" });
+      return;
+    }
+
+    if (!["customer", "kitchen"].includes(role)) {
+      res.status(400).json({ error: "Bad Request", message: "Invalid role" });
+      return;
+    }
+
+    // Check if user already exists
+    const [existingUser] = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
+    if (existingUser) {
+      res.status(409).json({ error: "Conflict", message: "User with this email already exists" });
+      return;
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create user
+    const [user] = await db.insert(usersTable).values({
+      name,
+      email,
+      password: hashedPassword,
+      role,
+      phone: phone || null,
+      addresses: [],
+      isBlocked: false,
+    }).returning();
+
+    res.status(201).json(formatUser(user));
+  } catch (err) {
+    console.error("Create user error:", err);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
