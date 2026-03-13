@@ -121,7 +121,7 @@ export default function CheckoutScreen() {
                       backgroundColor: deliveryAddress === addr ? Colors.primary + "10" : theme.surface,
                     }]}
                   >
-                    <Ionicons name="location-outline" size={16} color={deliveryAddress === addr ? Colors.primary : theme.textSecondary} />
+                    <Ionicons name="location" size={16} color={deliveryAddress === addr ? Colors.primary : theme.textSecondary} />
                     <Text style={[styles.addressText, { color: deliveryAddress === addr ? Colors.primary : theme.text }]} numberOfLines={1}>{addr}</Text>
                   </TouchableOpacity>
                 ))}
@@ -131,7 +131,7 @@ export default function CheckoutScreen() {
               placeholder="Or enter delivery address..."
               value={deliveryAddress}
               onChangeText={setDeliveryAddress}
-              leftIcon="location-outline"
+              leftIcon="location"
               multiline
             />
           </View>

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { router } from "expo-router";
 
 export type UserRole = "customer" | "admin" | "kitchen";
 
@@ -29,7 +30,7 @@ interface AuthContextType extends AuthState {
 }
 
 const BASE_URL = process.env.EXPO_PUBLIC_DOMAIN
-  ? `https://${process.env.EXPO_PUBLIC_DOMAIN}/api`
+  ? `http://${process.env.EXPO_PUBLIC_DOMAIN}/api`
   : "/api";
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -74,6 +75,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       AsyncStorage.setItem("auth_user", JSON.stringify(data.user)),
     ]);
     setState({ user: data.user, token: data.token, isLoading: false });
+    
+    // Navigate based on user role
+    if (data.user.role === "admin") {
+      router.replace("/admin");
+    } else if (data.user.role === "kitchen") {
+      router.replace("/kitchen");
+    } else {
+      router.replace("/(tabs)");
+    }
   };
 
   const register = async (name: string, email: string, password: string, role: UserRole = "customer") => {
@@ -89,14 +99,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       AsyncStorage.setItem("auth_user", JSON.stringify(data.user)),
     ]);
     setState({ user: data.user, token: data.token, isLoading: false });
+    
+    // Navigate based on user role
+    if (data.user.role === "admin") {
+      router.replace("/admin");
+    } else if (data.user.role === "kitchen") {
+      router.replace("/kitchen");
+    } else {
+      router.replace("/(tabs)");
+    }
   };
 
   const logout = async () => {
-    await Promise.all([
-      AsyncStorage.removeItem("auth_token"),
-      AsyncStorage.removeItem("auth_user"),
-    ]);
-    setState({ user: null, token: null, isLoading: false });
+    try {
+      console.log("Starting logout...");
+      await Promise.all([
+        AsyncStorage.removeItem("auth_token"),
+        AsyncStorage.removeItem("auth_user"),
+      ]);
+      console.log("Storage cleared, updating state...");
+      setState({ user: null, token: null, isLoading: false });
+      
+      console.log("State updated, navigating to login...");
+      // Navigate back to login page
+      router.replace("/(auth)/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Even if there's an error, try to clear state and navigate
+      setState({ user: null, token: null, isLoading: false });
+      router.replace("/(auth)/login");
+    }
   };
 
   const updateUser = (user: User) => {

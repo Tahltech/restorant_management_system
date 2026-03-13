@@ -38,7 +38,9 @@ export function MealCard({ meal, onPress, horizontal = false }: MealCardProps) {
           {meal.averageRating != null && (
             <View style={styles.ratingRow}>
               <StarRating rating={meal.averageRating} size={12} />
-              <Text style={[styles.ratingText, { color: theme.textSecondary }]}>{meal.averageRating.toFixed(1)}</Text>
+              <Text style={[styles.ratingText, { color: theme.textSecondary }]}>
+                {typeof meal.averageRating === 'number' ? meal.averageRating.toFixed(1) : '0.0'}
+              </Text>
             </View>
           )}
           <Text style={[styles.prepTime, { color: theme.textTertiary }]}>
@@ -83,7 +85,9 @@ export function MealCard({ meal, onPress, horizontal = false }: MealCardProps) {
           {meal.averageRating != null && (
             <View style={styles.ratingRow}>
               <Ionicons name="star" size={12} color={Colors.star} />
-              <Text style={[styles.ratingText, { color: theme.textSecondary }]}>{meal.averageRating.toFixed(1)}</Text>
+              <Text style={[styles.ratingText, { color: theme.textSecondary }]}>
+                {typeof meal.averageRating === 'number' ? meal.averageRating.toFixed(1) : '0.0'}
+              </Text>
             </View>
           )}
           <Text style={[styles.prepTime, { color: theme.textTertiary }]}>

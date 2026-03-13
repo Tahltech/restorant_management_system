@@ -58,8 +58,21 @@ export default function OrderDetailScreen() {
     queryKey: ["order", id],
     queryFn: () => ordersApi.get(id!),
     enabled: !!id,
-    refetchInterval: order?.status !== "delivered" && order?.status !== "cancelled" ? 10000 : false,
   });
+
+  // Set refetch interval based on order status
+  React.useEffect(() => {
+    if (!order) return;
+    
+    const shouldRefetch = order.status !== "delivered" && order.status !== "cancelled";
+    if (!shouldRefetch) return;
+    
+    const timer = setInterval(() => {
+      qc.invalidateQueries({ queryKey: ["order", id] });
+    }, 10000);
+    
+    return () => clearInterval(timer);
+  }, [order, id, qc]);
 
   const { mutate: cancelOrder, isPending: cancelling } = useMutation({
     mutationFn: () => ordersApi.cancel(id!),
@@ -152,7 +165,7 @@ export default function OrderDetailScreen() {
           </View>
           {order.deliveryAddress && (
             <View style={styles.infoRow}>
-              <Ionicons name="location-outline" size={18} color="#AAA" />
+              <Ionicons name="location" size={18} color="#AAA" />
               <Text style={styles.infoValue}>{order.deliveryAddress}</Text>
             </View>
           )}

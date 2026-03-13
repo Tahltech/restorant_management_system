@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export const BASE_URL = process.env.EXPO_PUBLIC_DOMAIN
-  ? `https://${process.env.EXPO_PUBLIC_DOMAIN}/api`
+  ? `http://${process.env.EXPO_PUBLIC_DOMAIN}/api`
   : "/api";
 
 async function getToken() {

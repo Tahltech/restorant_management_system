@@ -47,7 +47,10 @@ function setupSignalHandlers() {
 function stripProtocol(domain) {
   let urlString = domain.trim();
 
-  if (!/^https?:\/\//i.test(urlString)) {
+  // For local development, use HTTP instead of HTTPS
+  if (!/^https?:\/\//i.test(urlString) && !urlString.includes('localhost')) {
+    urlString = `http://${urlString}`;
+  } else if (!/^https?:\/\//i.test(urlString)) {
     urlString = `https://${urlString}`;
   }
 
@@ -55,20 +58,20 @@ function stripProtocol(domain) {
 }
 
 function getDeploymentDomain() {
-  if (process.env.REPLIT_INTERNAL_APP_DOMAIN) {
-    return stripProtocol(process.env.REPLIT_INTERNAL_APP_DOMAIN);
-  }
-
-  if (process.env.REPLIT_DEV_DOMAIN) {
-    return stripProtocol(process.env.REPLIT_DEV_DOMAIN);
+  if (process.env.DEPLOYMENT_DOMAIN) {
+    return stripProtocol(process.env.DEPLOYMENT_DOMAIN);
   }
 
   if (process.env.EXPO_PUBLIC_DOMAIN) {
     return stripProtocol(process.env.EXPO_PUBLIC_DOMAIN);
   }
 
+  if (process.env.HOSTNAME) {
+    return stripProtocol(process.env.HOSTNAME);
+  }
+
   console.error(
-    "ERROR: No deployment domain found. Set REPLIT_INTERNAL_APP_DOMAIN, REPLIT_DEV_DOMAIN, or EXPO_PUBLIC_DOMAIN",
+    "ERROR: No deployment domain found. Set DEPLOYMENT_DOMAIN, EXPO_PUBLIC_DOMAIN, or HOSTNAME",
   );
   process.exit(1);
 }
@@ -124,7 +127,7 @@ async function checkMetroHealth() {
 }
 
 function getExpoPublicReplId() {
-  return process.env.REPL_ID || process.env.EXPO_PUBLIC_REPL_ID;
+  return process.env.EXPO_PUBLIC_REPL_ID || process.env.BUILD_ID || 'default';
 }
 
 async function startMetro(expoPublicDomain, expoPublicReplId) {

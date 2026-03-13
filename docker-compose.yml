@@ -1,0 +1,74 @@
+services:
+  # Backend API Server
+  api-server:
+    build:
+      context: ./artifacts/api-server
+      dockerfile: Dockerfile
+    container_name: restaurant-api
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=postgresql://restaurant_user:restaurant_pass@postgres:5432/restaurant_db
+    depends_on:
+      - postgres
+    networks:
+      - restaurant-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: restaurant-postgres
+    environment:
+      - POSTGRES_DB=restaurant_db
+      - POSTGRES_USER=restaurant_user
+      - POSTGRES_PASSWORD=restaurant_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - restaurant-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U restaurant_user -d restaurant_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Frontend (Mockup Sandbox)
+  frontend:
+    build:
+      context: ./artifacts/mockup-sandbox
+      dockerfile: Dockerfile
+    container_name: restaurant-frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:3000/api
+      - NODE_ENV=development
+    depends_on:
+      - api-server
+    networks:
+      - restaurant-network
+    restart: unless-stopped
+    volumes:
+      - ./artifacts/mockup-sandbox:/app
+      - /app/node_modules
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  restaurant-network:
+    driver: bridge

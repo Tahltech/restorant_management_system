@@ -44,10 +44,31 @@ export default function ProfileScreen() {
   const topPadding = Platform.OS === "web" ? 67 : insets.top;
 
   const handleLogout = () => {
-    Alert.alert("Sign Out", "Are you sure you want to sign out?", [
-      { text: "Cancel", style: "cancel" },
-      { text: "Sign Out", style: "destructive", onPress: () => logout() },
-    ]);
+    console.log("Logout button pressed");
+    
+    // Try immediate logout first (without confirmation)
+    try {
+      logout();
+    } catch (error) {
+      console.error("Direct logout failed:", error);
+      
+      // Fallback to confirmation dialog
+      Alert.alert("Sign Out", "Are you sure you want to sign out?", [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Sign Out", 
+          style: "destructive", 
+          onPress: () => {
+            console.log("Logout confirmed in alert");
+            try {
+              logout();
+            } catch (err) {
+              console.error("Logout in alert also failed:", err);
+            }
+          }
+        },
+      ]);
+    }
   };
 
   const roleLabel = user?.role === "admin" ? "Admin" : user?.role === "kitchen" ? "Kitchen Staff" : "Customer";
@@ -79,7 +100,7 @@ export default function ProfileScreen() {
       <View style={[styles.section, { backgroundColor: theme.card }]}>
         <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>Account</Text>
         <ProfileItem icon="person-outline" label="Edit Profile" onPress={() => {}} theme={theme} />
-        <ProfileItem icon="location-outline" label="Delivery Addresses" onPress={() => {}} theme={theme} rightText={`${user?.addresses?.length || 0} saved`} />
+        <ProfileItem icon="location" label="Delivery Addresses" onPress={() => {}} theme={theme} rightText={`${user?.addresses?.length || 0} saved`} />
         <ProfileItem icon="receipt-outline" label="Order History" onPress={() => router.push("/(tabs)/orders")} theme={theme} />
       </View>
 
