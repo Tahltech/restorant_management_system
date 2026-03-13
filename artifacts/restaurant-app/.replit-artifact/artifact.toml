@@ -1,0 +1,27 @@
+kind = "mobile"
+previewPath = "/"
+title = "Restaurant Management System"
+version = "1.0.0"
+id = "artifacts/restaurant-app"
+router = "expo-domain"
+
+[[integratedSkills]]
+name = "expo"
+version = "1.0.0"
+
+[[services]]
+ensurePreviewReachable = "/status"
+localPort = 23972
+name = "expo"
+paths = ["/"]
+
+[services.development]
+run = "pnpm --filter @workspace/restaurant-app run dev"
+
+[services.env]
+PORT = "23972"
+BASE_PATH = "/"
+
+[services.production]
+build = ["pnpm", "--filter", "@workspace/restaurant-app", "run", "build"]
+run = ["pnpm", "--filter", "@workspace/restaurant-app", "run", "serve"]

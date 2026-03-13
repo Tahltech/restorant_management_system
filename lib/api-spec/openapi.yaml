@@ -1,22 +1,36 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Restaurant Management System API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: meals
+    description: Meal operations
+  - name: categories
+    description: Category operations
+  - name: orders
+    description: Order operations
+  - name: users
+    description: User operations
+  - name: reviews
+    description: Review operations
+  - name: cart
+    description: Cart operations
+  - name: admin
+    description: Admin operations
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,7 +38,586 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /categories:
+    get:
+      operationId: listCategories
+      tags: [categories]
+      summary: List all categories
+      responses:
+        "200":
+          description: List of categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
+    post:
+      operationId: createCategory
+      tags: [categories]
+      summary: Create a category (admin only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCategoryRequest"
+      responses:
+        "201":
+          description: Category created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+
+  /categories/{id}:
+    put:
+      operationId: updateCategory
+      tags: [categories]
+      summary: Update a category (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCategoryRequest"
+      responses:
+        "200":
+          description: Category updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+    delete:
+      operationId: deleteCategory
+      tags: [categories]
+      summary: Delete a category (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Category deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /meals:
+    get:
+      operationId: listMeals
+      tags: [meals]
+      summary: List all available meals
+      parameters:
+        - name: categoryId
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: available
+          in: query
+          schema:
+            type: boolean
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: List of meals
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MealsListResponse"
+    post:
+      operationId: createMeal
+      tags: [meals]
+      summary: Create a meal (admin only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMealRequest"
+      responses:
+        "201":
+          description: Meal created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Meal"
+
+  /meals/{id}:
+    get:
+      operationId: getMeal
+      tags: [meals]
+      summary: Get a single meal
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Meal details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Meal"
+        "404":
+          description: Meal not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: updateMeal
+      tags: [meals]
+      summary: Update a meal (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMealRequest"
+      responses:
+        "200":
+          description: Meal updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Meal"
+    delete:
+      operationId: deleteMeal
+      tags: [meals]
+      summary: Delete a meal (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Meal deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /orders:
+    post:
+      operationId: createOrder
+      tags: [orders]
+      summary: Create a new order
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOrderRequest"
+      responses:
+        "201":
+          description: Order created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+    get:
+      operationId: listAllOrders
+      tags: [orders]
+      summary: List all orders (admin/kitchen)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/OrderStatus"
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: List of orders
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrdersListResponse"
+
+  /orders/my-orders:
+    get:
+      operationId: listMyOrders
+      tags: [orders]
+      summary: List current user's orders
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: User's orders
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrdersListResponse"
+
+  /orders/{id}:
+    get:
+      operationId: getOrder
+      tags: [orders]
+      summary: Get a single order
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Order details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+
+  /orders/{id}/status:
+    put:
+      operationId: updateOrderStatus
+      tags: [orders]
+      summary: Update order status
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateOrderStatusRequest"
+      responses:
+        "200":
+          description: Order status updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+
+  /orders/{id}/cancel:
+    put:
+      operationId: cancelOrder
+      tags: [orders]
+      summary: Cancel an order (customer)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Order cancelled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+
+  /users/profile:
+    get:
+      operationId: getProfile
+      tags: [users]
+      summary: Get user profile
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    put:
+      operationId: updateProfile
+      tags: [users]
+      summary: Update user profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProfileRequest"
+      responses:
+        "200":
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users:
+    get:
+      operationId: listUsers
+      tags: [users]
+      summary: List all users (admin only)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+
+  /users/{id}/block:
+    put:
+      operationId: blockUser
+      tags: [users]
+      summary: Block/unblock a user (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                blocked:
+                  type: boolean
+              required:
+                - blocked
+      responses:
+        "200":
+          description: User block status updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /reviews:
+    post:
+      operationId: createReview
+      tags: [reviews]
+      summary: Create a review
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReviewRequest"
+      responses:
+        "201":
+          description: Review created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Review"
+
+  /reviews/{mealId}:
+    get:
+      operationId: getMealReviews
+      tags: [reviews]
+      summary: Get reviews for a meal
+      parameters:
+        - name: mealId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Meal reviews
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Review"
+
+  /admin/stats:
+    get:
+      operationId: getAdminStats
+      tags: [admin]
+      summary: Get admin dashboard stats
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Admin stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStats"
+
+  /admin/seed:
+    post:
+      operationId: seedData
+      tags: [admin]
+      summary: Seed the database with demo data
+      responses:
+        "200":
+          description: Data seeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
     HealthStatus:
       type: object
@@ -34,3 +627,503 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+      required:
+        - error
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required:
+        - success
+
+    UserRole:
+      type: string
+      enum:
+        - customer
+        - admin
+        - kitchen
+
+    OrderStatus:
+      type: string
+      enum:
+        - pending
+        - preparing
+        - ready
+        - delivered
+        - cancelled
+
+    PaymentMethod:
+      type: string
+      enum:
+        - cash
+        - card
+        - online
+
+    OrderType:
+      type: string
+      enum:
+        - delivery
+        - pickup
+
+    RegisterRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 6
+        phone:
+          type: string
+        role:
+          $ref: "#/components/schemas/UserRole"
+      required:
+        - name
+        - email
+        - password
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required:
+        - email
+        - password
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+      required:
+        - token
+        - user
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          $ref: "#/components/schemas/UserRole"
+        phone:
+          type: string
+        profileImage:
+          type: string
+          nullable: true
+        addresses:
+          type: array
+          items:
+            type: string
+        isBlocked:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - email
+        - role
+        - isBlocked
+        - addresses
+        - createdAt
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        profileImage:
+          type: string
+        addresses:
+          type: array
+          items:
+            type: string
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        imageUrl:
+          type: string
+          nullable: true
+        mealCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - mealCount
+        - createdAt
+
+    CreateCategoryRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        imageUrl:
+          type: string
+      required:
+        - name
+
+    Meal:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        categoryId:
+          type: string
+          nullable: true
+        categoryName:
+          type: string
+          nullable: true
+        price:
+          type: number
+        imageUrl:
+          type: string
+          nullable: true
+        available:
+          type: boolean
+        ingredients:
+          type: array
+          items:
+            type: string
+        preparationTime:
+          type: integer
+          description: Preparation time in minutes
+        averageRating:
+          type: number
+          nullable: true
+        reviewCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - price
+        - available
+        - ingredients
+        - preparationTime
+        - reviewCount
+        - createdAt
+
+    MealsListResponse:
+      type: object
+      properties:
+        meals:
+          type: array
+          items:
+            $ref: "#/components/schemas/Meal"
+        total:
+          type: integer
+        page:
+          type: integer
+        totalPages:
+          type: integer
+      required:
+        - meals
+        - total
+        - page
+        - totalPages
+
+    CreateMealRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        categoryId:
+          type: string
+        price:
+          type: number
+        imageUrl:
+          type: string
+        available:
+          type: boolean
+        ingredients:
+          type: array
+          items:
+            type: string
+        preparationTime:
+          type: integer
+      required:
+        - name
+        - price
+
+    OrderItem:
+      type: object
+      properties:
+        mealId:
+          type: string
+        mealName:
+          type: string
+        quantity:
+          type: integer
+        price:
+          type: number
+        imageUrl:
+          type: string
+          nullable: true
+      required:
+        - mealId
+        - mealName
+        - quantity
+        - price
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        userName:
+          type: string
+          nullable: true
+        userEmail:
+          type: string
+          nullable: true
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderItem"
+        totalPrice:
+          type: number
+        status:
+          $ref: "#/components/schemas/OrderStatus"
+        orderType:
+          $ref: "#/components/schemas/OrderType"
+        deliveryAddress:
+          type: string
+          nullable: true
+        paymentMethod:
+          $ref: "#/components/schemas/PaymentMethod"
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - userId
+        - items
+        - totalPrice
+        - status
+        - orderType
+        - paymentMethod
+        - createdAt
+        - updatedAt
+
+    OrdersListResponse:
+      type: object
+      properties:
+        orders:
+          type: array
+          items:
+            $ref: "#/components/schemas/Order"
+        total:
+          type: integer
+        page:
+          type: integer
+        totalPages:
+          type: integer
+      required:
+        - orders
+        - total
+        - page
+        - totalPages
+
+    CreateOrderRequest:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              mealId:
+                type: string
+              quantity:
+                type: integer
+            required:
+              - mealId
+              - quantity
+        orderType:
+          $ref: "#/components/schemas/OrderType"
+        deliveryAddress:
+          type: string
+        paymentMethod:
+          $ref: "#/components/schemas/PaymentMethod"
+        notes:
+          type: string
+      required:
+        - items
+        - orderType
+        - paymentMethod
+
+    UpdateOrderStatusRequest:
+      type: object
+      properties:
+        status:
+          $ref: "#/components/schemas/OrderStatus"
+      required:
+        - status
+
+    Review:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        userName:
+          type: string
+          nullable: true
+        mealId:
+          type: string
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - userId
+        - mealId
+        - rating
+        - createdAt
+
+    CreateReviewRequest:
+      type: object
+      properties:
+        mealId:
+          type: string
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+      required:
+        - mealId
+        - rating
+
+    AdminStats:
+      type: object
+      properties:
+        totalOrders:
+          type: integer
+        totalRevenue:
+          type: number
+        pendingOrders:
+          type: integer
+        preparingOrders:
+          type: integer
+        readyOrders:
+          type: integer
+        totalCustomers:
+          type: integer
+        totalMeals:
+          type: integer
+        recentOrders:
+          type: array
+          items:
+            $ref: "#/components/schemas/Order"
+        popularMeals:
+          type: array
+          items:
+            type: object
+            properties:
+              mealId:
+                type: string
+              mealName:
+                type: string
+              orderCount:
+                type: integer
+              revenue:
+                type: number
+            required:
+              - mealId
+              - mealName
+              - orderCount
+              - revenue
+        dailySales:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+              revenue:
+                type: number
+              orderCount:
+                type: integer
+            required:
+              - date
+              - revenue
+              - orderCount
+      required:
+        - totalOrders
+        - totalRevenue
+        - pendingOrders
+        - preparingOrders
+        - readyOrders
+        - totalCustomers
+        - totalMeals
+        - recentOrders
+        - popularMeals
+        - dailySales

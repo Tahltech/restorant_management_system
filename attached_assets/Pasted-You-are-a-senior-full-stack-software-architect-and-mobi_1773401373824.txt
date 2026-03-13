@@ -1,0 +1,416 @@
+You are a senior full-stack software architect and mobile engineer.
+Design and build a **modern Restaurant Management System** with a **React Native mobile app** and a **JavaScript backend using Node.js, Express, and MongoDB**.
+
+The system must be **production-ready, scalable, secure, and cleanly structured**.
+
+## 1. TECH STACK
+
+Frontend (Mobile App)
+
+* React Native (Expo or CLI)
+* React Navigation
+* Axios for API requests
+* Redux Toolkit or Zustand for state management
+* React Native Paper or NativeBase for UI
+* Formik + Yup for form validation
+
+Backend
+
+* Node.js
+* Express.js
+* MongoDB
+* Mongoose ORM
+* JWT authentication
+* bcrypt for password hashing
+* Multer for file uploads
+* Cloudinary or similar for image storage
+
+Other tools
+
+* Docker support
+* REST API architecture
+* MVC folder structure
+* Environment variables (.env)
+
+---
+
+# 2. USER ROLES
+
+The system must support **multiple roles**:
+
+1. Customer
+2. Restaurant Admin
+3. Kitchen Staff
+4. Delivery Rider (optional)
+
+---
+
+# 3. CORE FEATURES
+
+## CUSTOMER FEATURES
+
+User Authentication
+
+* Register
+* Login
+* Forgot password
+* Email verification
+* JWT authentication
+
+Profile
+
+* Edit profile
+* Upload profile photo
+* Manage delivery addresses
+* View order history
+
+Restaurant Menu
+
+* View restaurant menu
+* Browse categories
+* View meal details
+* Meal images
+* Price
+* Ingredients
+* Availability
+
+Search
+
+* Search meals
+* Filter meals by category or price
+
+Cart
+
+* Add to cart
+* Remove from cart
+* Update quantity
+* Calculate total automatically
+
+Checkout
+
+* Place order
+* Choose delivery or pickup
+* Select address
+* Payment method
+
+Orders
+
+* Track order status
+* View order history
+* Cancel order (if not processed)
+
+Notifications
+
+* Order status updates
+* Promotions
+
+Ratings
+
+* Rate meals
+* Leave reviews
+
+---
+
+# 4. ADMIN FEATURES
+
+Admin dashboard should allow:
+
+Restaurant Management
+
+* Update restaurant information
+* Manage opening hours
+
+Menu Management
+
+* Add meals
+* Edit meals
+* Delete meals
+* Upload meal images
+* Create meal categories
+
+Order Management
+
+* View all orders
+* Update order status:
+
+  * Pending
+  * Preparing
+  * Ready
+  * Delivered
+  * Cancelled
+
+User Management
+
+* View customers
+* Block users if needed
+
+Reports
+
+* Daily sales
+* Weekly sales
+* Popular meals
+
+---
+
+# 5. KITCHEN STAFF FEATURES
+
+Kitchen dashboard should allow:
+
+* View incoming orders
+* Change status to "Preparing"
+* Change status to "Ready"
+* See order details
+* Meal preparation queue
+
+---
+
+# 6. DATABASE DESIGN (MongoDB)
+
+Design proper schemas.
+
+Users
+
+* name
+* email
+* password
+* role
+* phone
+* addresses
+* profileImage
+* createdAt
+
+Meals
+
+* name
+* description
+* category
+* price
+* image
+* availability
+* ingredients
+* preparationTime
+
+Categories
+
+* name
+* description
+
+Orders
+
+* user
+* items
+* totalPrice
+* orderStatus
+* deliveryAddress
+* paymentMethod
+* createdAt
+
+OrderItems
+
+* meal
+* quantity
+* price
+
+Reviews
+
+* user
+* meal
+* rating
+* comment
+
+---
+
+# 7. API ENDPOINTS
+
+Create REST endpoints such as:
+
+Auth
+POST /api/auth/register
+POST /api/auth/login
+POST /api/auth/forgot-password
+
+Meals
+GET /api/meals
+GET /api/meals/:id
+POST /api/meals
+PUT /api/meals/:id
+DELETE /api/meals/:id
+
+Orders
+POST /api/orders
+GET /api/orders/my-orders
+GET /api/orders
+PUT /api/orders/:id/status
+
+Users
+GET /api/users/profile
+PUT /api/users/profile
+
+Reviews
+POST /api/reviews
+GET /api/reviews/:mealId
+
+---
+
+# 8. MOBILE APP SCREENS
+
+Customer App Screens:
+
+Splash Screen
+Login
+Register
+Home
+Restaurant Menu
+Meal Details
+Cart
+Checkout
+Order Tracking
+Order History
+Profile
+Settings
+
+Admin App Screens:
+
+Dashboard
+Manage Meals
+Manage Categories
+Orders List
+Users
+
+Kitchen App Screens:
+
+Kitchen Orders
+Order Details
+Preparation Status
+
+---
+
+# 9. UI / UX DESIGN
+
+The UI must be **modern, minimal, and smooth**.
+
+Design inspiration:
+
+* Uber Eats
+* DoorDash
+* Glovo
+
+Primary Colors
+
+* Primary: #FF6B35 (Food orange)
+* Secondary: #2EC4B6 (Fresh green)
+* Background: #F8F9FA
+* Dark text: #1E1E1E
+
+Typography
+
+* Clean modern font
+* Large readable titles
+* Card based layout
+
+UI Elements
+
+* Rounded cards
+* Soft shadows
+* Smooth animations
+* Bottom navigation tabs
+* Floating action buttons
+
+---
+
+# 10. MOBILE NAVIGATION STRUCTURE
+
+Use React Navigation:
+
+Bottom Tabs
+
+* Home
+* Cart
+* Orders
+* Profile
+
+Stack navigation for:
+
+* Meal details
+* Checkout
+* Order tracking
+
+---
+
+# 11. PROJECT STRUCTURE
+
+Mobile App
+
+/src
+/components
+/screens
+/navigation
+/services
+/store
+/hooks
+/utils
+
+Backend
+
+/src
+/controllers
+/routes
+/models
+/middleware
+/services
+/utils
+/config
+
+---
+
+# 12. SECURITY
+
+Implement:
+
+* JWT authentication
+* Password hashing with bcrypt
+* Input validation
+* Rate limiting
+* CORS protection
+* Secure headers
+
+---
+
+# 13. PERFORMANCE
+
+* Pagination
+* Image optimization
+* Lazy loading
+* API caching
+* Proper indexing in MongoDB
+
+---
+
+# 14. OPTIONAL ADVANCED FEATURES
+
+Add if possible:
+
+* Real time order updates using Socket.io
+* Push notifications
+* Payment integration (Stripe or Flutterwave)
+* Delivery rider tracking
+* QR ordering inside restaurant
+* Admin analytics dashboard
+
+---
+
+# 15. FINAL REQUIREMENTS
+
+Provide:
+
+1. Complete backend code
+2. MongoDB schemas
+3. REST API
+4. React Native mobile app
+5. Authentication flow
+6. Example seed data
+7. Docker setup
+8. Clear documentation
+9. Clean scalable architecture
+
+Write production-quality code with best practices.
